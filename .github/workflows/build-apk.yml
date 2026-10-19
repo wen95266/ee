@@ -1,0 +1,160 @@
+name: Build and Package Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths-ignore:
+      - '**.md'
+      - 'TERMUX_DEPLOY_GUIDE.md'
+      - 'GAME_FILES_DESCRIPTION.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NPM Dependencies
+        run: npm ci || npm install
+
+      - name: Build Web Application
+        run: npm run build
+
+      - name: Sync Capacitor Android Project
+        run: npx cap sync android
+
+      - name: Make Gradlew Executable
+        run: chmod +x android/gradlew
+
+      - name: Build Android APK (Release & Debug)
+        run: |
+          cd android
+          ./gradlew assembleRelease assembleDebug --no-daemon --stacktrace
+
+      - name: Prepare APK Output Directory
+        id: vars
+        run: |
+          mkdir -p release-apks
+          
+          # Copy release APK (fallback to debug if release not generated)
+          if [ -f "android/app/build/outputs/apk/release/app-release.apk" ]; then
+            cp android/app/build/outputs/apk/release/app-release.apk release-apks/chess-game-release.apk
+          elif [ -f "android/app/build/outputs/apk/release/app-release-unsigned.apk" ]; then
+            cp android/app/build/outputs/apk/release/app-release-unsigned.apk release-apks/chess-game-release.apk
+          fi
+
+          if [ -f "android/app/build/outputs/apk/debug/app-debug.apk" ]; then
+            cp android/app/build/outputs/apk/debug/app-debug.apk release-apks/chess-game-debug.apk
+          fi
+
+          # If release-apks/chess-game-release.apk still doesn't exist, use debug apk
+          if [ ! -f "release-apks/chess-game-release.apk" ] && [ -f "release-apks/chess-game-debug.apk" ]; then
+            cp release-apks/chess-game-debug.apk release-apks/chess-game-release.apk
+          fi
+
+          echo "Build finished. APK files:"
+          ls -lh release-apks/
+
+          echo "build_time=$(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
+          echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Upload APKs to GitHub Actions Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: chess-game-apk
+          path: release-apks/*.apk
+          overwrite: true
+          retention-days: 30
+
+      - name: Update Latest Git Tag
+        continue-on-error: true
+        run: |
+          git tag -f latest-apk
+          git push -f origin latest-apk || true
+
+      - name: Publish and Overwrite Latest APK in GitHub Releases
+        uses: softprops/action-gh-release@v2
+        continue-on-error: true
+        with:
+          tag_name: latest-apk
+          target_commitish: ${{ github.sha }}
+          name: "五大经典国粹棋牌 - 最新打包 APK (Auto Build)"
+          body: |
+            🎮 **五大经典国粹棋牌 Android APK 最新安装包**
+
+            - 🚀 **自动覆盖机制**：仓库代码有任何更新并推送，本 Release 中的旧 APK 会被自动重新构建并覆盖替换为最新版本。
+            - 🕒 **最新构建时间**：${{ steps.vars.outputs.build_time }}
+            - 🔖 **Git 提交版本**：`${{ steps.vars.outputs.short_sha }}`
+
+            ---
+
+            ### 🇨🇳 国内极速加速下载通道 (免代理·高速直链，推荐国内网络使用)
+            - 🚀 **[极速线路 1 (GHProxy 专线)]**：
+              [点击直接高速下载 chess-game-release.apk](https://ghproxy.net/https://github.com/${{ github.repository }}/releases/download/latest-apk/chess-game-release.apk)
+            - ⚡️ **[高速线路 2 (GitMirror 专线)]**：
+              [点击直接高速下载 chess-game-release.apk](https://hub.gitmirror.com/https://github.com/${{ github.repository }}/releases/download/latest-apk/chess-game-release.apk)
+            - 🌐 **[镜像线路 3 (KKGitHub 节点)]**：
+              [点击前往 KKGitHub 镜像下载](https://kkgithub.com/${{ github.repository }}/releases/download/latest-apk/chess-game-release.apk)
+            - 📦 **[仓库 Raw 文件加速直链]**：
+              [点击高速下载仓库 app-latest.apk](https://ghproxy.net/https://raw.githubusercontent.com/${{ github.repository }}/main/apk/app-latest.apk)
+
+            ---
+
+            ### 🌍 GitHub 官方原始下载通道
+            - ⭐️ **[推荐] 正式安装版 (Release APK)**：
+              [点击下载 chess-game-release.apk](https://github.com/${{ github.repository }}/releases/download/latest-apk/chess-game-release.apk)
+            - 🛠️ **调试测试版 (Debug APK)**：
+              [点击下载 chess-game-debug.apk](https://github.com/${{ github.repository }}/releases/download/latest-apk/chess-game-debug.apk)
+
+            > 💡 **安卓安装说明**：手机浏览器下载完成后点击安装，如遇系统提示“允许来自此来源的应用”或“允许未知应用安装”，勾选允许即可安全畅玩！
+          draft: false
+          prerelease: false
+          make_latest: true
+          files: |
+            release-apks/chess-game-release.apk
+            release-apks/chess-game-debug.apk
+
+      - name: Auto-Commit & Overwrite APK in Repository
+        continue-on-error: true
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p apk
+          cp release-apks/chess-game-release.apk apk/app-latest.apk
+          git add -f apk/app-latest.apk
+          if git diff --staged --quiet; then
+            echo "No change in binary apk file."
+          else
+            git commit -m "chore(apk): auto-update app-latest.apk [skip ci]"
+            git push origin HEAD:${{ github.ref_name }} || echo "Push skipped or branch protected"
+          fi

@@ -1,0 +1,75 @@
+{
+  "profiles": {
+    "default": {
+      "id": "USER-8888",
+      "name": "茗局雅客",
+      "username": "admin",
+      "phone": "13800138000",
+      "isAdmin": true,
+      "avatar": "🀄",
+      "coins": 88888,
+      "rating": 1800,
+      "level": 3,
+      "lastCheckinDate": "",
+      "stats": {
+        "doudizhu": {
+          "played": 28,
+          "won": 19,
+          "highestScore": 1200
+        },
+        "yansan": {
+          "played": 18,
+          "won": 12,
+          "highestScore": 850
+        },
+        "chudadi": {
+          "played": 14,
+          "won": 9,
+          "highestScore": 960
+        },
+        "shisanshui": {
+          "played": 12,
+          "won": 8,
+          "highestScore": 24
+        },
+        "mahjong": {
+          "played": 35,
+          "won": 22,
+          "highestScore": 88
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "REC-101",
+      "gameType": "doudizhu",
+      "gameName": "经典斗地主",
+      "result": "win",
+      "coinsDelta": 600,
+      "ratingDelta": 25,
+      "details": "地主抢叫3分春天，倍数 ×6",
+      "timestamp": "10:05"
+    },
+    {
+      "id": "REC-102",
+      "gameType": "yansan",
+      "gameName": "经典烟三",
+      "result": "win",
+      "coinsDelta": 450,
+      "ratingDelta": 20,
+      "details": "方块三连环开路，率先出清",
+      "timestamp": "10:08"
+    },
+    {
+      "id": "REC-103",
+      "gameType": "mahjong",
+      "gameName": "经典国标麻将",
+      "result": "win",
+      "coinsDelta": 880,
+      "ratingDelta": 40,
+      "details": "自摸万字清一色满贯",
+      "timestamp": "10:12"
+    }
+  ]
+}
