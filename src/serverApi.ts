@@ -666,7 +666,11 @@ export async function handleApiRoute(
     try {
       const body = await parseJsonBody(req);
       // Support both direct simulator payload { command } and Telegram webhook update { message: { text } }
-      const rawText = body.command || body.message?.text || '';
+      let rawText = body.command || body.message?.text || '';
+      if (rawText.includes('查看玩家')) rawText = '/users';
+      else if (rawText.includes('运营统计')) rawText = '/stats';
+      else if (rawText.includes('帮助说明') || rawText.includes('菜单')) rawText = '/help';
+      else if (rawText.includes('发布广播')) rawText = '/broadcast 请输入广播内容';
       const operator = body.operator || body.message?.from?.username || 'Telegram Bot Admin';
       const parts = rawText.trim().split(/\s+/);
       const cmd = (parts[0] || '').toLowerCase();
@@ -872,6 +876,15 @@ export async function handleApiRoute(
       const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
       // Proactively push message if bot token is present
+      const replyMarkup = {
+        keyboard: [
+          [{ text: '👥 查看玩家' }, { text: '📊 运营统计' }],
+          [{ text: '📢 发布广播' }, { text: '❓ 帮助说明' }]
+        ],
+        resize_keyboard: true,
+        is_persistent: true,
+      };
+
       if (chatId && botToken) {
         try {
           fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -881,6 +894,7 @@ export async function handleApiRoute(
               chat_id: chatId,
               text: reply,
               parse_mode: 'Markdown',
+              reply_markup: replyMarkup,
             }),
           }).catch(() => {});
         } catch {}
@@ -897,6 +911,7 @@ export async function handleApiRoute(
               chat_id: chatId,
               text: reply,
               parse_mode: 'Markdown',
+              reply_markup: replyMarkup,
             }
           : {}),
       });
