@@ -579,11 +579,13 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Accept Android SDK Licenses
+        run: |
+          echo "Using Android SDK at: $ANDROID_HOME"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses 2>/dev/null || true
 
       - name: Install NPM Dependencies
-        run: npm ci || npm install
+        run: npm install --no-audit --no-fund
 
       - name: Build Web Application
         run: npm run build
