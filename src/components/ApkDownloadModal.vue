@@ -33,12 +33,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+// Correct repository: wen95266/ee
+const repoPath = 'wen95266/ee';
+const releaseApkUrl = `https://github.com/${repoPath}/releases/download/latest-apk/chess-game-release.apk`;
+const rawApkUrl = `https://raw.githubusercontent.com/${repoPath}/main/apk/app-latest.apk`;
+const ghproxyRawUrl = `https://ghproxy.net/${releaseApkUrl}`;
+const releasePageUrl = `https://github.com/${repoPath}/releases/tag/latest-apk`;
 
 defineEmits<{ (e: 'close'): void }>();
-
-const repoPath = 'junwuji717/chess-game';
-const rawApkUrl = `https://raw.githubusercontent.com/${repoPath}/main/apk/app-latest.apk`;
-const ghproxyRawUrl = `https://ghproxy.net/${rawApkUrl}`;
-const releasePageUrl = `https://github.com/${repoPath}/releases/tag/latest-apk`;
 </script>
