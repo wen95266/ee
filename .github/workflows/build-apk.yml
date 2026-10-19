@@ -41,10 +41,11 @@ jobs:
           java-version: '21'
           cache: 'gradle'
 
-      - name: Accept Android SDK Licenses
+      - name: Accept Android SDK Licenses & Install Android 36 SDK
         run: |
           echo "Using Android SDK at: $ANDROID_HOME"
           yes 2>/dev/null | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses 2>/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" 2>/dev/null || true
 
       - name: Install NPM Dependencies
         run: npm install --no-audit --no-fund
@@ -65,9 +66,9 @@ jobs:
             echo "sdk.dir=$ANDROID_HOME" > android/local.properties
           fi
 
-          # Ensure SDK 35 compatibility for broad CI compatibility
-          sed -i 's/compileSdkVersion = 36/compileSdkVersion = 35/g' android/variables.gradle 2>/dev/null || true
-          sed -i 's/targetSdkVersion = 36/targetSdkVersion = 35/g' android/variables.gradle 2>/dev/null || true
+          # Ensure SDK 36 is configured as required by Capacitor 8 (androidx.activity 1.11.0, androidx.core 1.17.0)
+          sed -i 's/compileSdkVersion = 35/compileSdkVersion = 36/g' android/variables.gradle 2>/dev/null || true
+          sed -i 's/targetSdkVersion = 35/targetSdkVersion = 36/g' android/variables.gradle 2>/dev/null || true
 
           # Ensure release APK has debug signing so it can be installed on Android without manual keystore
           if ! grep -q "signingConfig signingConfigs.debug" android/app/build.gradle 2>/dev/null; then
