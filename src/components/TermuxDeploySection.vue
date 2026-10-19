@@ -579,11 +579,10 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Accept Android SDK Licenses & Configure local.properties
+      - name: Accept Android SDK Licenses
         run: |
           echo "Using Android SDK at: $ANDROID_HOME"
           yes 2>/dev/null | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses 2>/dev/null || true
-          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
 
       - name: Install NPM Dependencies
         run: npm install --no-audit --no-fund
@@ -591,11 +590,33 @@ jobs:
       - name: Build Web Application
         run: npm run build
 
+      - name: Ensure Android Native Project and Gradlew Exist
+        run: |
+          mkdir -p android
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+          
+          if [ ! -f "android/gradlew" ]; then
+            echo "android/gradlew not found in repository! Generating android platform via Capacitor..."
+            rm -rf android
+            npx cap add android
+            mkdir -p android
+            echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+          fi
+
+          # Ensure SDK 35 compatibility for broad CI compatibility
+          sed -i 's/compileSdkVersion = 36/compileSdkVersion = 35/g' android/variables.gradle 2>/dev/null || true
+          sed -i 's/targetSdkVersion = 36/targetSdkVersion = 35/g' android/variables.gradle 2>/dev/null || true
+
+          # Ensure release APK has debug signing so it can be installed on Android without manual keystore
+          if ! grep -q "signingConfig signingConfigs.debug" android/app/build.gradle 2>/dev/null; then
+            sed -i '/release {/a \            signingConfig signingConfigs.debug' android/app/build.gradle 2>/dev/null || true
+          fi
+
       - name: Sync Capacitor Android Project
         run: npx cap sync android
 
       - name: Make Gradlew Executable
-        run: chmod +x android/gradlew
+        run: chmod +x android/gradlew || true
 
       - name: Build Android APK (Release & Debug)
         run: |
