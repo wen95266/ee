@@ -4,19 +4,37 @@
       <!-- Header -->
       <div class="flex items-center justify-between pb-3 border-b border-[#2E2722] mb-3">
         <h3 class="text-sm font-bold">Android APK 下载</h3>
-        <button type="button" @click="$emit('close')" class="text-xs text-[#B8A99A]">✕</button>
+        <button type="button" @click="$emit('close')" class="text-xs text-[#B8A99A] hover:text-white transition-colors">✕</button>
       </div>
 
       <!-- Links -->
       <div class="space-y-2 mb-4">
-        <a :href="rawApkUrl" download class="block w-full p-2.5 rounded-lg bg-[#26201B] hover:bg-amber-700/50 border border-amber-500/30 text-xs text-center transition-colors">
-          线路 1：极速直链下载
+        <!-- 线路 1：GHProxy 极速直链下载 -->
+        <a 
+          :href="rawApkUrl" 
+          download 
+          class="block w-full p-2.5 rounded-lg bg-[#26201B] hover:bg-amber-700/50 border border-amber-500/30 text-xs text-center transition-colors"
+        >
+          🚀 线路 1：极速直链下载 (GHProxy)
         </a>
-        <a :href="ghproxyRawUrl" download class="block w-full p-2.5 rounded-lg bg-[#26201B] hover:bg-amber-700/50 border border-amber-500/30 text-xs text-center transition-colors">
-          线路 2：国内加速镜像
+
+        <!-- 线路 2：GitMirror 国内镜像加速 -->
+        <a 
+          :href="gitmirrorUrl" 
+          download 
+          class="block w-full p-2.5 rounded-lg bg-[#26201B] hover:bg-amber-700/50 border border-amber-500/30 text-xs text-center transition-colors"
+        >
+          ⚡ 线路 2：国内镜像下载 (GitMirror)
         </a>
-        <a :href="releasePageUrl" target="_blank" class="block w-full p-2.5 rounded-lg bg-[#26201B] hover:bg-amber-700/50 border border-amber-500/30 text-xs text-center transition-colors">
-          线路 3：GitHub 官方页面
+
+        <!-- 线路 3：GitHub 官方 Release 发布页 -->
+        <a 
+          :href="releasePageUrl" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="block w-full p-2.5 rounded-lg bg-[#26201B] hover:bg-amber-700/50 border border-amber-500/30 text-xs text-center transition-colors"
+        >
+          🌐 线路 3：GitHub 官方页面 (备用)
         </a>
       </div>
 
@@ -33,11 +51,22 @@
 </template>
 
 <script setup lang="ts">
-// Correct repository: wen95266/ee
+// 仓库配置
 const repoPath = 'wen95266/ee';
-const releaseApkUrl = `https://github.com/${repoPath}/releases/download/latest-apk/chess-game-release.apk`;
-const rawApkUrl = `https://raw.githubusercontent.com/${repoPath}/main/apk/app-latest.apk`;
-const ghproxyRawUrl = `https://ghproxy.net/${releaseApkUrl}`;
+
+// 真实存在的 APK 文件名（根据 GitHub Release 资产列表）
+const apkFileName = 'chess-game-debug.apk';
+
+// 1. GitHub 官方原始直链
+const releaseApkUrl = `https://github.com/${repoPath}/releases/download/latest-apk/${apkFileName}`;
+
+// 2. 线路 1：GHProxy 极速直链下载
+const rawApkUrl = `https://ghproxy.net/${releaseApkUrl}`;
+
+// 3. 线路 2：GitMirror 镜像加速
+const gitmirrorUrl = `https://hub.gitmirror.com/${releaseApkUrl}`;
+
+// 4. 线路 3：GitHub 发布页面
 const releasePageUrl = `https://github.com/${repoPath}/releases/tag/latest-apk`;
 
 defineEmits<{ (e: 'close'): void }>();
